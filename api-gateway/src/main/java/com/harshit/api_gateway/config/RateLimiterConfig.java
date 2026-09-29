@@ -1,8 +1,6 @@
 package com.harshit.api_gateway.config;
 
-import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Refill;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -13,12 +11,10 @@ public class RateLimiterConfig {
 
     @Bean
     public Bucket gatewayRateLimiter() {
-        Refill refill = Refill.intervally(10, Duration.ofMinutes(1));
-
-        Bandwidth limit = Bandwidth.classic(10, refill);
-
         return Bucket.builder()
-                .addLimit(limit)
+                .addLimit(limit -> limit
+                        .capacity(10)
+                        .refillIntervally(10, Duration.ofMinutes(1)))
                 .build();
     }
 }
