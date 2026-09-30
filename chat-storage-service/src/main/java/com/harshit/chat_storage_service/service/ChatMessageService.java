@@ -4,9 +4,9 @@ import com.harshit.chat_storage_service.entity.ChatMessage;
 import com.harshit.chat_storage_service.repository.ChatMessageRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class ChatMessageService {
@@ -17,14 +17,16 @@ public class ChatMessageService {
         this.chatMessageRepository = chatMessageRepository;
     }
 
-    @CacheEvict(value = "chatMessages", key = "#sessionId")
+    @CacheEvict(value = "chatMessages", allEntries = true)
     public ChatMessage saveMessage(String sessionId, String message) {
         ChatMessage chatMessage = new ChatMessage(sessionId, message);
         return chatMessageRepository.save(chatMessage);
     }
 
-    @Cacheable(value = "chatMessages", key = "#sessionId")
-    public List<ChatMessage> getMessages(String sessionId) {
-        return chatMessageRepository.findBySessionIdOrderByIdAsc(sessionId);
+    @Cacheable(value = "chatMessages", key = "#sessionId + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
+    public Page<ChatMessage> getMessages(String sessionId, Pageable pageable) {
+        return chatMessageRepository.findBySessionIdOrderByIdAsc(
+                sessionId,
+                pageable);
     }
 }
