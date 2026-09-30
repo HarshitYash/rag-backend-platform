@@ -16,9 +16,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 class ChatStorageServiceApplicationTests {
 
@@ -63,6 +64,25 @@ class ChatStorageServiceApplicationTests {
 				post("/api/chats/test-session/messages")
 						.contentType("application/json")
 						.content("{\"message\":\"\"}"))
+				.andExpect(status().isBadRequest());
+
+		verifyNoInteractions(service);
+	}
+
+	@Test
+	void getMessages_shouldRejectInvalidPageSize() throws Exception {
+		ChatMessageService service = mock(ChatMessageService.class);
+
+		ChatMessageController controller = new ChatMessageController(service);
+
+		MockMvc mockMvc = standaloneSetup(controller)
+				.setControllerAdvice(new GlobalExceptionHandler())
+				.build();
+
+		mockMvc.perform(
+				get("/api/chats/test-session/messages")
+						.param("page", "0")
+						.param("size", "100"))
 				.andExpect(status().isBadRequest());
 
 		verifyNoInteractions(service);
